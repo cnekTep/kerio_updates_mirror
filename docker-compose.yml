@@ -1,0 +1,65 @@
+services:
+  tor:
+    image: "tor"
+    stop_signal: SIGINT
+    restart: unless-stopped
+    build:
+      context: ./_tor
+    networks:
+      external:
+        ipv4_address: 172.222.0.5
+    extra_hosts:
+      - "ids-update.kerio.com:172.222.0.10"
+      - "sophos-update.kerio.com:172.222.0.10"
+      - "wf-activation.kerio.com:172.222.0.10"
+      - "prod-update.kerio.com:172.222.0.10"
+      - "bdupdate.kerio.com:172.222.0.10"
+      - "bda-update.kerio.com:172.222.0.10"
+      - "update.kerio.com:172.222.0.10"
+    volumes:
+      - ./_tor/tor.config:/etc/tor/torrc:ro
+      - ./_tor/privoxy.config:/etc/privoxy/config:ro
+      - tor-data:/var/lib/tor
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+  mirror:
+    image: "mirrorkc"
+    stop_signal: SIGINT
+    restart: unless-stopped
+    build:
+      context: ./_mirrorKC
+    volumes:
+      - ./_mirrorKC/mirror/logs/mirror.log:/var/log/mirror.log
+      - ./_mirrorKC/mirror/logs/mkc.log:/var/log/mkc.log
+      - ./_mirrorKC/mirror/lastrun.txt:/var/lib/mirror/lastrun
+      - ./_mirrorKC/mirror/updates/control-update:/var/lib/mirror/control-update
+    networks:
+      external:
+        ipv4_address: 172.222.0.10
+    ports:
+      - "9980:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+
+volumes:
+  tor-data:
+    driver: local
+
+
+networks:
+  external:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.222.0.0/24
+          gateway: 172.222.0.1

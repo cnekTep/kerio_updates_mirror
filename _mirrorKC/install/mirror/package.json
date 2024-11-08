@@ -1,0 +1,25 @@
+{
+  "name": "mirrorkc",
+  "version": "1.3.12",
+  "description": "Kerio Products Update Mirror",
+  "main": "monitor.js",
+  "private": true,
+  "dependencies": {
+    "colors": ">=1.4.0",
+    "http-proxy": ">=1.18.1",
+    "moment": ">=2.29.1",
+    "iconv-lite": ">=0.6.2",
+    "respawn": ">=2.6.0",
+    "ip": ">=1.1.5",
+    "system-sleep": ">=1.3.7",
+    "node-ssdp": ">=4.0.0",
+    "request": ">=2.88.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node index.js",
+    "start": "node monitor.js"
+  },
+  "author": "RBC Crew",
+  "license": "ISC"
+}
