@@ -1,6 +1,6 @@
 services:
   tor:
-    image: "tor"
+    image: "tor:v1.0.0"
     stop_signal: SIGINT
     restart: unless-stopped
     build:
@@ -27,7 +27,7 @@ services:
         max-file: "10"
 
   mirror:
-    image: "mirrorkc"
+    image: "mirrorkc:v1.1.0"
     stop_signal: SIGINT
     restart: unless-stopped
     build:

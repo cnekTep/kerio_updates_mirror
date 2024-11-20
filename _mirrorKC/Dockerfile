@@ -15,7 +15,9 @@ RUN apt update && apt install -y --no-install-recommends \
     && rm -f /var/lib/mirror/tmp/libssl1.0.2_1.0.2u-1_amd64.deb \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --omit=dev \
-    && rm -rf /root/.npm
+    && rm -rf /root/.npm \
+    && chmod +x /var/lib/mirror/mkc \
+    && chmod +x /var/lib/mirror/start.sh
 
 # Command to start the application
-CMD ["bash", "-c", "node /var/lib/mirror/monitor.js | tee /var/log/mirror.log"]
+CMD ["/var/lib/mirror/start.sh"]
