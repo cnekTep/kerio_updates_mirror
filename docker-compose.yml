@@ -1,6 +1,6 @@
 services:
   tor:
-    image: "tor:v1.0.0"
+    image: "tor:v1.1.0"
     stop_signal: SIGINT
     restart: unless-stopped
     build:
@@ -17,9 +17,12 @@ services:
       - "bda-update.kerio.com:172.222.0.10"
       - "update.kerio.com:172.222.0.10"
     volumes:
-      - ./_tor/tor.config:/etc/tor/torrc:ro
-      - ./_tor/privoxy.config:/etc/privoxy/config:ro
+      - ./_tor/configs/tor.config:/etc/tor/torrc:ro
+      - ./_tor/configs/bridges.config:/etc/tor/bridges
+      - ./_tor/configs/privoxy.config:/etc/privoxy/config:ro
       - tor-data:/var/lib/tor
+    environment:
+      - USE_CHECK_TOR=true  # Use Tor availability check and search for new Bridges or not
     logging:
       driver: "json-file"
       options:
