@@ -136,6 +136,7 @@ dmypy.json
 _curl
 __images__
 __dockers__
+__temp__
 _mirrorKC/install/mirror/mkc
 docker-compose_dev.yml
 *.*~
