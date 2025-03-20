@@ -30,7 +30,7 @@ services:
         max-file: "10"
 
   mirror:
-    image: "mirrorkc:v1.1.0"
+    image: "mirrorkc:v1.1.1"
     stop_signal: SIGINT
     restart: unless-stopped
     build:
