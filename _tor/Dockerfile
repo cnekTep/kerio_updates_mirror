@@ -1,5 +1,5 @@
 # Use Alpine Linux as the base image
-FROM alpine:latest
+FROM alpine:3.21
 
 # Update the repositories and install necessary packages
 RUN apk --no-cache --update --upgrade add \
@@ -8,7 +8,7 @@ RUN apk --no-cache --update --upgrade add \
     py3-requests \
     py3-pysocks \
     lyrebird \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
+    --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 
 # Copy the Python script and make it executable
 COPY ./check_tor /usr/local/bin/check_tor
