@@ -1,6 +1,6 @@
 services:
   tor:
-    image: "tor:v1.1.0"
+    image: "tor:v1.1.1"
     stop_signal: SIGINT
     restart: unless-stopped
     build:
