@@ -1,20 +1,18 @@
 var respawn = require('respawn');
-//var util = require('util');
-var logger = require('./logger.js');
 
-var monitor = respawn(['node', __dirname+'/index.js'], {
-    env: {ENV_VAR:'test'}, // set env vars
-    cwd: '.',              // set cwd
-    maxRestarts:10,        // how many restarts are allowed within 60s
-    sleep:1000,            // time to sleep between restarts
+var monitor = respawn(['node', __dirname + '/server.js'], {
+    env: {ENV_VAR:'test'}, // установка переменных среды
+    cwd: '.',              // установка cwd
+    maxRestarts:10,        // Количество допустимых перезапусков в течение 60с
+    sleep:1000,            // Промежуток времени между перезапусками
 });
 
 monitor.on('spawn', function () {
-  console.log('application monitor started...');
+  console.log('Начало работы программы:');
 });
 
 monitor.on('exit', function (code, signal) {
-  logger.fatal({msg: 'process exited, code: ' + code + ' signal: ' + signal});
+  console.log('Выход из программы, code: ' + code + ' signal: ' + signal);
 });
 
 monitor.on('stdout', function (data) {
@@ -22,7 +20,7 @@ monitor.on('stdout', function (data) {
 });
 
 monitor.on('stderr', function (data) {
-  logger.error({msg: 'process error', data: data.toString()});
+  console.log('Ошибка программы ' + data.toString());
 });
 
 monitor.start(); // spawn and watch

@@ -1,22 +1,26 @@
 <div align="center">
 
 # Kerio updates mirror
+
 ### Local updates mirror for Kerio Control and Kerio Connect.
 
 **English** · [Русский](./docs/ru/README.ru.md)
 </div>
 
 ## Disclaimer
+
 Performance testing was carried out on the following software versions:
+
 - **Ubuntu**: 24.04.1
 - **Kerio Connect**: 10.0.6.8504
 - **Kerio Control**: 9.4.5.8526
-- **mkc**: 1.4.3
 
 ## Installation and usage
 
 ### Installing Docker and Docker Compose
+
 Docker and Docker Compose are required for work. Install them following the instructions:
+
 1. Install additional packages:
     ```bash
     sudo apt install curl software-properties-common ca-certificates apt-transport-https -y
@@ -43,38 +47,47 @@ Docker and Docker Compose are required for work. Install them following the inst
     ```
 
 ### Launching a mirror from ready-made Docker images
-1. [Download Docker images.](https://t.me/my_store_files_bot?start=kerio_connect_mirror)
+
+1. [Download Docker images.](https://t.me/my_store_files_bot?start=kerio_updates_mirror)
 2. Download images from the archives:
     ```bash
-    sudo docker load -i kerio_connect_mirror.tar
+    sudo docker load -i tor_v1.1.1.tar
     ```
+   ```bash
+   sudo docker load -i mirrorkc_v1.2.0.tar
+   ```
 3. Download the repository and run ```docker-compose```:
     ```bash
     sudo docker-compose up -d
     ```
 
 ### Launching a mirror from source code
+
 1. Download the repository.
-2. Copy the actual version of ```mkc``` to the folder ```_mirrorKC/install/mirror```.
-3. Give the ```mkc``` file execution rights: ```chmod u+x```
-4. Run ```docker-compose```:
+2. Run ```docker-compose```:
    ```bash
     sudo docker-compose up -d
     ```
 
-### Setup
-- In the Kerio Connect mail server settings, set an intermediate HTTP server:
-  ```
-  - Address: 172.222.0.5
-  - Port: 8118
-  ```
-  After that, the antivirus will be updated and anti-spam will work.
-- Bridges for connecting to TOR are in the file: ```_tor/config/bridges.config```.
-  - If the ```USE_CHECK_TOR=true``` parameter is set in the docker-compose.yml file, then a background check of Internet availability via TOR will be performed, and in case of unavailability, TOR bridges will be updated automatically.
-  - You can get new bridges on the [official website](https://bridges.torproject.org) or via a [Telegram bot](https://t.me/GetBridgesBot).
-- View logs and set additional settings: ```http://IP_SERVER_KERIO_CONNECT:9980/logsmkc.php```
+### Updating Kerio Connect using the update mirror
+
+[Configuration Guide](docs/en/kerio_connect.md)
+
+- Antivirus will be updated automatically and anti-spam will work.
 
 ### Updating Kerio Control using the update mirror
+
 [Configuration Guide](docs/en/kerio_control.md)
+
 - The antivirus will be updated automatically.
 - New BlockList's (Intrusion Prevention) are downloaded automatically (approximately every 8 hours).
+
+### Additionally
+
+- Bridges for connecting to TOR are in the file: ```_tor/config/bridges.config```.
+    - If the ```USE_CHECK_TOR=true``` parameter is set in the docker-compose.yml file, then a background check of
+      Internet availability via TOR will be performed, and in case of unavailability, TOR bridges will be updated
+      automatically.
+    - You can get new bridges on the [official website](https://bridges.torproject.org) or via
+      a [Telegram bot](https://t.me/GetBridgesBot).
+- View logs and set additional settings: ```http://IP_SERVER_KERIO_CONNECT:9980/logsmkc.php```

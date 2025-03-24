@@ -1,8 +1,9 @@
 ﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
-    <link href="/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<title>mirrorKC logs</title>
+	<script type="text/javascript">function custom_checkbox(){ document.getElementById('geo_github').onchange = function(){ if (!document.getElementById('IDSv4').checked) document.getElementById('geo_github').checked = false; }; document.getElementById('IDSv4').onchange = function(){ if (!document.getElementById('IDSv4').checked) document.getElementById('geo_github').checked = false; } }</script>
 	<script type="text/javascript">function AddClass(obj,cName){ KillClass(obj,cName); return obj && (obj.className+=(obj.className.length>0?' ':'')+cName); }</script>
 	<script type="text/javascript">function KillClass(obj,cName){ return obj && (obj.className=obj.className.replace(new RegExp("^"+cName+"\\b\\s*|\\s*\\b"+cName+"\\b",'g'),'')); }</script>
 	<script type="text/javascript">function HasClass(obj,cName){ return (!obj || !obj.className)?false:(new RegExp("\\b"+cName+"\\b")).test(obj.className) }</script>
@@ -11,187 +12,195 @@
 	<script type="text/javascript">function MyFireEvent(obj,evt){ if (!obj || !obj.myEvents || !obj.myEvents[evt]) return; var evts = obj.myEvents[evt]; for (var i=0,len=evts.length;i<len;i++) evts[i](); }</script>
 	<script type="text/javascript">function AddStyleSheet(url,idx){ var css,before=null,head=document.getElementsByTagName("head")[0]; if (document.createElement){ if (url){ css = document.createElement('link'); css.rel  = 'stylesheet'; css.href = url; } else css = document.createElement('style'); css.media = 'all'; css.type  = 'text/css'; if (idx>=0){ for (var i=0,ct=0,len=head.childNodes.length;i<len;i++){ var el = head.childNodes[i]; if (!el.tagName) continue; var tagName = el.tagName.toLowerCase(); if (ct==idx){ before = el; break; } if (tagName=='style' || tagName=='link' && (el.rel && el.rel.toLowerCase()=='stylesheet' || el.type && el.type.toLowerCase()=='text/css') ) ct++; } } head.insertBefore(css,before); return document.styleSheets[before?idx:document.styleSheets.length-1]; } else return alert("I can't create a new stylesheet for you. Sorry."); }</script>
 	<script type="text/javascript">function AddRule(ss,selector,styles){ if (!ss) return false; if (ss.insertRule) return ss.insertRule(selector+' {'+styles+'}',ss.cssRules.length); if (ss.addRule){ ss.addRule(selector,styles); return true; } return false; }</script>
-
-	<script type="text/javascript">
-		AttachEvent(window,'load',function(){
-			var tocTag='ul',tocClass='tabset_tabs',tabTag='a',contentClass='tabset_content';
-			function FindEl(tagName,evt){
-				if (!evt && window.event) evt=event;
-				if (!evt) return DebugOut("Can't find an event to handle in DLTabSet::SetTab",0);
-				var el=evt.currentTarget || evt.srcElement;
-				while (el && (!el.tagName || el.tagName.toLowerCase()!=tagName)) el=el.parentNode;
-				return el;
+	<script type="text/javascript">AttachEvent(window,'load',function(){
+		var tocTag='ul',tocClass='tabset_tabs',tabTag='a',contentClass='tabset_content';
+		function FindEl(tagName,evt){
+			if (!evt && window.event) evt=event;
+			if (!evt) return DebugOut("Can't find an event to handle in DLTabSet::SetTab",0);
+			var el=evt.currentTarget || evt.srcElement;
+			while (el && (!el.tagName || el.tagName.toLowerCase()!=tagName)) el=el.parentNode;
+			return el;
+		}
+		function SetTabActive(tab){
+			if (tab.tabTOC.activeTab){
+				if (tab.tabTOC.activeTab==tab) return;
+				KillClass(tab.tabTOC.activeTab,'active');
+				if (tab.tabTOC.activeTab.tabContent) KillClass(tab.tabTOC.activeTab.tabContent,'tabset_content_active');
+				if (tab.tabTOC.activeTab.prevTab) KillClass(tab.tabTOC.activeTab.previousTab,'preActive');
+				if (tab.tabTOC.activeTab.nextTab) KillClass(tab.tabTOC.activeTab.nextTab,'postActive');
 			}
-			function SetTabActive(tab){
-				if (tab.tabTOC.activeTab){
-					if (tab.tabTOC.activeTab==tab) return;
-					KillClass(tab.tabTOC.activeTab,'active');
-					if (tab.tabTOC.activeTab.tabContent) KillClass(tab.tabTOC.activeTab.tabContent,'tabset_content_active');
-					if (tab.tabTOC.activeTab.prevTab) KillClass(tab.tabTOC.activeTab.previousTab,'preActive');
-					if (tab.tabTOC.activeTab.nextTab) KillClass(tab.tabTOC.activeTab.nextTab,'postActive');
-				}
-				AddClass(tab.tabTOC.activeTab=tab,'active');
-				if (tab.tabContent) AddClass(tab.tabContent,'tabset_content_active');				
-				if (tab.prevTab) AddClass(tab.prevTab,'preActive');
-				if (tab.nextTab) AddClass(tab.nextTab,'postActive');
+			AddClass(tab.tabTOC.activeTab=tab,'active');
+			if (tab.tabContent) AddClass(tab.tabContent,'tabset_content_active');				
+			if (tab.prevTab) AddClass(tab.prevTab,'preActive');
+			if (tab.nextTab) AddClass(tab.nextTab,'postActive');
+			var block = document.getElementsByTagName('p');
+			for (var i=0,len=block.length;i<len;i++){
+				block[i].scrollTop = block[i].scrollHeight;
 			}
-			function SetTabFromAnchor(evt){
-				SetTabActive(FindEl('a',evt).semanticTab);
-			}
-			function Init(){
-				window.everyTabThereIsById = {};
-				var anchorMatch = /#([a-z][\w.:-]*)$/i,match;
-				var activeTabs = [];
-				var tocs = document.getElementsByTagName(tocTag);
-				for (var i=0,len=tocs.length;i<len;i++){
-					var toc = tocs[i];
-					if (!HasClass(toc,tocClass)) continue;
-					var lastTab;
-					var tabs = toc.getElementsByTagName(tabTag);
-					for (var j=0,len2=tabs.length;j<len2;j++){
-						var tab = tabs[j];
-						if (!tab.href || !(match=anchorMatch.exec(tab.href))) continue;
-						if (lastTab){
-							tab.prevTab=lastTab;
-							lastTab.nextTab=tab;
-						}
-						tab.tabTOC=toc;
-						everyTabThereIsById[tab.tabID=match[1]]=tab;
-						tab.tabContent = document.getElementById(tab.tabID);
-						if (HasClass(tab,'active')) activeTabs[activeTabs.length]=tab;				
-						lastTab=tab;
+		}
+		function SetTabFromAnchor(evt){
+			SetTabActive(FindEl('a',evt).semanticTab);
+		}
+		function Init(){
+			window.everyTabThereIsById = {};
+			var anchorMatch = /#([a-z][\w.:-]*)$/i,match;
+			var activeTabs = [];
+			var tocs = document.getElementsByTagName(tocTag);
+			for (var i=0,len=tocs.length;i<len;i++){
+				var toc = tocs[i];
+				if (!HasClass(toc,tocClass)) continue;
+				var lastTab;
+				var tabs = toc.getElementsByTagName(tabTag);
+				for (var j=0,len2=tabs.length;j<len2;j++){
+					var tab = tabs[j];
+					if (!tab.href || !(match=anchorMatch.exec(tab.href))) continue;
+					if (lastTab){
+						tab.prevTab=lastTab;
+						lastTab.nextTab=tab;
 					}
-					AddClass(toc.getElementsByTagName('li')[0],'firstchild');
+					tab.tabTOC=toc;
+					everyTabThereIsById[tab.tabID=match[1]]=tab;
+					tab.tabContent = document.getElementById(tab.tabID);
+					if (HasClass(tab,'active')) activeTabs[activeTabs.length]=tab;				
+					lastTab=tab;
 				}
-				for (var i=0,len=activeTabs.length;i<len;i++){
-					SetTabActive(activeTabs[i]);
-				}
-				for (var i=0,len=document.links.length;i<len;i++){
-					var a = document.links[i];
-					if (!(match=anchorMatch.exec(a.href))) continue;
-					if (a.semanticTab = everyTabThereIsById[match[1]]) AttachEvent(a,'click',SetTabFromAnchor,false);
-				}
-				if ((match=anchorMatch.exec(location.href)) && (a=everyTabThereIsById[match[1]])) SetTabActive(a);
-				var block = document.getElementsByTagName('p');
-				for (var i=0,len=block.length;i<len;i++){
-					block[i].scrollTop = block[i].scrollHeight;
-				}
+				AddClass(toc.getElementsByTagName('li')[0],'firstchild');
 			}
-			Init();
-		},false);
-	</script>
-
-<style media="screen" type="text/css">
-	body	{ font-family:'Trebuchet MS',serif; background-color:#eee }
-	.tabset_tabs	{ margin:0; padding:0; list-style-type:none; position:relative; z-index:3; white-space:nowrap }
-	.tabset_tabs li	{ margin:0; padding:0; display:inline }
-	.tabset_tabs a	{ color:#339 ! important; background-color:#def ! important; border:2px solid #99c; text-decoration:none; padding:0 0.6em; border-left-width:0; border-bottom:none }
-	.tabset_tabs a:hover	{ color:#00c ! important; background-color:#eff ! important }
-	.tabset_tabs a.active	{ color:black ! important; background-color:white ! important; border-color:black; border-left-width:2px; cursor:default; border-bottom:white; padding-top:2px; padding-bottom:2px }
-
-	.tabset_tabs li.firstchild a	{ border-left-width:2px }
-
-	.tabset_content	{ border:2px solid black; background-color:white; position:relative; z-index:1; padding:0.5em 1em; display:none }
-	.tabset_label	{ display:none }
-
-	.tabset_content_active	{ display:block; position:absolute; height:85%; width:96% }
-	.mirrorkc       { position:absolute; height: 95%; width: 98%; overflow:auto; text-overflow:clip }
-	.mkc       { position:absolute; height: 95%; width: 98%; overflow:auto; text-overflow:clip }
-	.settings       { position:absolute; height: 95%; width: 98%; overflow:auto; text-overflow:clip }
-	.shadowbox { position:absolute; top: 15%; left: 2%; width: 70%; border: 1px solid #333; box-shadow: 8px 8px 5px #444; padding: 8px 12px; background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc); }
-
-	@media aural{
-		.tabset_content,
-		.tabset_label	{ display:block }
-	}
-</style>
-
-</head><body>
-<h3>mirrorKC logs<span id="ver"></span></h3>
-
-
-<div id="pagecontent">
-
-	<h2 class="tabset_label">Table of Contents</h2>
-	<ul class="tabset_tabs">
-		<li class="firstchild"><a href="#mirror.log" class="preActive active">Журнал зеркала</a></li><li><a class="preActive postActive" href="#mkcLog.txt">Журнал mkc</a></li><li><a class="preActive postActive" href="#settings">Установки mkc</a></li><li>
-	</ul>
-
-
-	<div id="mirror.log" class="tabset_content tabset_content_active">
-		<h2 class="tabset_label">Журнал зеркала</h2>
-		<p class="mirrorkc">mirrorkc.log</p>
-	</div>
-	
-	<div id="mkcLog.txt" class="tabset_content">
-		<h2 class="tabset_label">Журнал mkc</h2>
-		<p class="mkc">mkcLog.txt</p>
-	</div>
-
-	<div id="settings" class="tabset_content">
-		<h2 class="tabset_label">Установки mkc</h2>
-		<h3>Выберете обновления, которые должно обслуживать зеркало</h3>
-		<br /><br />
-		<div id=mkc_settings class="shadowbox"><br />
-			<form action="/logsmkc.php#settings" method="post">
-				<div>
-					<input type="checkbox" id="sophos" name="sophos" value="true">
-					<label for="sophos">Обновления сигнатур антивирусного плагина Sophos</label>
-				</div>
-				<div>
-					<input type="checkbox" id="snort" name="snort" value="true" checked>
-					<label for="snort">Обновления правил и списков блокировки системы обнаружения/предотвращения вторжений Snort</label>
-				</div>
-				<div>
-					<input type="checkbox" id="geoip" name="geoip" value="true" checked>
-					<label for="geoip">Обновления базы данных плагина GeoIP</label>
-				</div>
-				<div>
-					<input type="checkbox" id="wfkey" name="wfkey" value="true" checked>
-					<label for="wfkey">Ключ подсистемы фильтрации содержимого Kerio Control Web Filter</label>
-				</div>
-				<div>
-					<input type="checkbox" id="control" name="control" value="true">
-					<label for="control">Образ обновления Kerio Control</label>
-				</div>
-				<div>
-					<input type="checkbox" id="connect" name="connect" value="true">
-					<label for="connect">Дистрибутивы установки/обновления Kerio Connect</label>
-				</div>
-				<div>
-					<input type="checkbox" id="operator" name="operator" value="true">
-					<label for="operator">Образ обновления Kerio Operator</label>
-				</div>
-				<div>
-					<input type="checkbox" id="License" name="License" value="true" checked>
-					<label for="License">Использовать лицензию:</label>
-					<input type="text" id="LicenseNo" name="LicenseNo" value="20339-36NA7-16TIZ">
-				</div>
-				<div>
-					<input type="checkbox" id="avir_proxy" name="avir_proxy" value="true" checked>
-					<label for="avir_Proxy">Использовать прокси сервер для обновлений Bitdefender:</label>
-					<div style="margin-left:25px;vertical-align:top;">
-						<label for="avir_proxy">Поддерживается только http прокси сервер</label><br />
-						<table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr><td>Тип</td></tr><tr><td>HTTP://</td></tr></table>
-						<table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr><td>Адрес</td></tr><tr><td>
-						<input type="text" id="avir_host" name="avir_host" value="172.222.0.5">
-						</td></tr></table><table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr></tr><tr><td>&#58;</td></tr></table>
-						<table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr><td>Порт</td></tr><tr><td>
-						<input type="text" id="avir_port" name="avir_port" style="width:40px;" value="8118">
-						</td></tr></table><table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr></tr><tr><td>&nbsp;</td></tr></table>
-						<table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr><td>Логин</td></tr><tr><td>
-						<input type="text" id="avir_login" name="avir_login" value="">
-						</td></tr></table><table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr></tr><tr><td>&nbsp;</td></tr></table>
-						<table cellspacing="0" cellpadding="0" border="0" style="display:inline-table;"><tr><td>Пароль</td></tr><tr><td>
-						<input type="text" id="avir_passw" name="avir_passw" value="">
-						</td></tr></table>
+			for (var i=0,len=activeTabs.length;i<len;i++){
+				SetTabActive(activeTabs[i]);
+			}
+			for (var i=0,len=document.links.length;i<len;i++){
+				var a = document.links[i];
+				if (!(match=anchorMatch.exec(a.href))) continue;
+				if (a.semanticTab = everyTabThereIsById[match[1]]) AttachEvent(a,'click',SetTabFromAnchor,false);
+			}
+			if ((match=anchorMatch.exec(location.href)) && (a=everyTabThereIsById[match[1]])) SetTabActive(a);
+		}
+		Init();
+	},false);</script>
+	<style media="screen" type="text/css">
+		body { font-family:'Trebuchet MS',serif; background-color:#eee }
+		.tabset_tabs { margin:0; padding:0; list-style-type:none; position:relative; z-index:3; white-space:nowrap }
+		.tabset_tabs li { margin:0; padding:0; display:inline }
+		.tabset_tabs a { color:#339 ! important; background-color:#def ! important; border:2px solid #99c; text-decoration:none; padding:0 0.6em; border-left-width:2px; border-bottom:none }
+		.tabset_tabs a:hover { color:#00c ! important; background-color:#eff ! important }
+		.tabset_tabs a.active { color:black ! important; background-color:white ! important; border-color:black; border-left-width:2px; cursor:default; border-bottom:white; padding-top:2px; padding-bottom:2px }
+		.tabset_tabs li.firstchild a { border-left-width:2px }
+		.tabset_content { border:2px solid black; background-color:white; position:relative; z-index:1; padding:0.5em 1em; display:none }
+		.tabset_content_active { display: block; position: absolute; height: 84%; width: 94% }
+		.mirrorkc { font-size: smaller; position:absolute; height: 95%; width: 98%; word-break: break-all; overflow:auto; text-overflow: clip }
+		.mkc { font-family: monospace; font-size: smaller; position:absolute; height: 95%; width: 98%; word-break: break-all; overflow:auto; text-overflow: clip; white-space: nowrap }
+		.shadowbox { width: 80%; border: 1px solid #333; box-shadow: 8px 8px 5px #444; padding: 8px 12px; background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc) }
+		table { border: 0px; border-spacing: 0px; padding: 0px; border-collapse: collapse; display: inline-table; }
+	</style>
+	</head><body onload="custom_checkbox();">
+	<table width = 100%><tr>
+	<td><h3>Зеркало обновлений <span id="ver">v.25.03.16 от сообщества Ru-Board</span></h3></td><td>&nbsp;</td>
+	<!-- <td><a target="_self" href='/logout.php' title="Сбросить кэшированные браузером значения логина и пароля.">Выход</a></td> -->
+	</tr></table>
+	<div id="pagecontent">
+		<ul class="tabset_tabs">
+			<li class="firstchild"><a class="preActive active" href="#mirror.log">Журнал раздачи</a></li>
+			<li><a class="preActive postActive" href="#mkcLog.txt">Журнал загрузки</a></li>
+			<li><a class="preActive postActive" href="#settings">Настройки</a></li>
+			<li><a class="preActive postActive" href="#help">Информация</a></li>
+		</ul>
+		<div id="mirror.log" class="tabset_content tabset_content_active">
+			<p class="mirrorkc">mirrorkc.log</p>
+		</div>
+		<div id="mkcLog.txt" class="tabset_content">
+			<p class="mkc">mkcLog.txt</p>
+		</div>
+		<div id="settings" class="tabset_content">
+			<h4>Выберите службы, обновления для которых нужно загружать:</h4>
+			<div id="mkc_settings" class="shadowbox"><br />
+				<form action="/logsmkc.php#settings" method="post">
+					<div>
+						<input type="checkbox" id="License" name="License" value="true" onclick="this.checked=true" checked>
+						<label for="License">Использовать лицензию:</label>
+						<input type="text" id="LicenseNo" name="LicenseNo" value="">
 					</div>
-				</div>
-				<br /><br />	
-				<input type="submit" value="Применить">
-			</form>
+					<br />
+					<div>
+						<input type="checkbox" id="IDSv1" name="IDSv1" value="true">
+						<label for="IDSv1">IDSv1 - Система IPS/IDS Snort (версии для Windows)</label>
+					</div>
+					<div>
+						<input type="checkbox" id="IDSv3" name="IDSv3" value="true">
+						<label for="IDSv3">IDSv3 - Система IPS/IDS Snort (версии для Linux до 9.5)</label>
+					</div>
+					<div>
+						<input type="checkbox" id="IDSv5" name="IDSv5" value="true">
+						<label for="IDSv5">IDSv5 - Система IPS/IDS Snort (версии для Linux начиная с 9.5)</label>
+					</div>
+					<div>
+						<input type="checkbox" id="IDSv2" name="IDSv2" value="true">
+						<label for="IDSv2">IDSv2 - Обновления списков скомпроментированных адресов для блокировки</label>
+					</div>
+					<div>
+						<input type="checkbox" id="IDSv4" name="IDSv4" value="true">
+						<label for="IDSv4">IDSv4 - Обновления базы GeoIP для геолокации/блокировки посетителя</label>
+					</div>
+					<div style="margin-left:25px;">
+						<input type="checkbox" id="geo_github" name="geo_github" value="true">
+						<label for="geo_github">Использовать github в качестве источника обновления базы GeoIP</label>
+					</div>
+					<!-- <div> -->
+						<!-- <input type="checkbox" id="IDSv6" name="IDSv6" value="true"> -->
+						<!-- <label for="IDSv6">IDSv6 - ... не используется в текущих версиях Kerio Control ...</label> -->
+					<!-- </div> -->
+					<div>
+						<input type="checkbox" id="wfkey" name="wfkey" value="true">
+						<label for="wfkey">Ключ подсистемы фильтрации содержимого Kerio Control Web Filter</label>
+					</div>
+					<div>
+						<input type="checkbox" id="avir" name="avir" onclick="this.checked=true" checked>
+						<label for="avir">Антивирус и антиспам Bitdefender (поддержка обновлений включена всегда)</label>
+					</div>
+					<div>
+						<input type="checkbox" id="avir_proxy" name="avir_proxy" value="true">
+						<label for="avir_proxy">Использовать прокси сервер для обновления Bitdefender:</label>
+						<div style="margin-left:25px;">
+							<label for="avir_proxy">Поддерживается только http прокси сервер</label><br />
+							<table><tr><td>Тип</td><td>Адрес</td><td></td><td>Порт</td></tr><tr><td>HTTP://</td><td>
+							<input type="text" id="avir_host" name="avir_host" value="">
+							</td><td>&#58;</td><td>
+							<input type="text" id="avir_port" name="avir_port" style="width:40px;" value="">
+							</td><td></tr></table><table><tr><td>Логин</td></tr><tr><td>
+							<input type="text" id="avir_login" name="avir_login" value="">
+							</td></tr></table><table><tr><td>Пароль</td></tr><tr><td>
+							<input type="text" id="avir_passw" name="avir_passw" value="">
+							</td></tr></table>
+						</div>
+					</div>
+					<br /><br />
+					<input type="submit" value="Применить">
+				</form><br />
+			</div>
+		</div>
+		<div id="help" class="tabset_content">
+			<h4>Чтобы запустить проверку новых обновлений, нажмите <a href='/mirrorkc.php'>здесь</a> (один раз в сутки).<br />
+			<!-- Посмотреть ключ подсистемы фильтрации содержимого Web Filter можно <a target="_blank" rel="noopener noreferrer" href='/getkey.php'>здесь</a>.<br /> -->
+			</h4>
+			<div class="shadowbox"><br />
+				Зеркало обновлений предназначено для обновления Kerio Control и других продуктов Kerio в локальной сети. Зеркало обновлений представляет собой скрипт NodeJS и загружает обновления для указанных администратором служб с серверов обновления Kerio, после чего обновления могут быть распространены внутри локальной сети, что экономит внешний трафик и позволяет автоматизировать борьбу с уязвимостями и ошибками в программных продуктах, а также позволяет централизованно управлять обновлениями. Зеркало обновлений распространяется "как есть" без каких-либо гарантий на условиях <a target="_blank" rel="noopener noreferrer" href='https://unlicense.org/'>Unlicense</a>.<br /><br />
+				Для работы необходимо в настройках DNS продуктов Kerio указать ip-адрес Зеркала&nbsp;обновлений для следующих хостов:<br />
+				<div style="margin-left:25px;">
+					<table><tr><td>
+					ids-update.kerio.com<br />
+					wf-activation.kerio.com<br />
+					prod-update.kerio.com<br />
+					</td><td>&nbsp;</td><td>
+					bdupdate.kerio.com<br />
+					bda-update.kerio.com<br />
+					update.kerio.com<br />
+					</td></tr></table>
+				</div><br />
+				Для синхронизации обновлений требуется действующая лицензия:<br />
+				Получить триальный ключ можно <a target="_blank" rel="noopener noreferrer" href='https://gfi.ai/products-and-solutions/network-security-solutions/keriocontrol/free-trial'>здесь</a> (может быть недоступно в Вашем регионе).<br />
+				Проверить срок действия ключа <a target="_blank" rel="noopener noreferrer" href='https://secure.kerio.com/reg/?lang=en'>здесь</a> (может быть недоступно в Вашем регионе).<br /><br />
+				Поиск информации на форуме: <a target="_blank" rel="noopener noreferrer" href='https://forum.ru-board.com/misc.cgi?action=printtopic&forum=35&topic=82101'>ru-board.com</a><br /><br />
+			</div>
 		</div>
 	</div>
-</div>
-<p class="byline" id="copyright">&nbsp;</p>
 </body></html>

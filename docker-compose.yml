@@ -30,7 +30,7 @@ services:
         max-file: "10"
 
   mirror:
-    image: "mirrorkc:v1.1.1"
+    image: "mirrorkc:v1.2.0"
     stop_signal: SIGINT
     restart: unless-stopped
     build:
@@ -45,6 +45,7 @@ services:
         ipv4_address: 172.222.0.10
     ports:
       - "9980:80"
+      - "9943:443"
     logging:
       driver: "json-file"
       options:

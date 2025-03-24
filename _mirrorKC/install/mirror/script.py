@@ -1,4 +1,5 @@
 import time
+from http.client import HTTPResponse
 from urllib import request
 
 
@@ -14,6 +15,17 @@ def read_lastrun(file_path: str) -> str:
     """
     with open(file_path, "r") as f:
         return f.read()[:-3]
+
+
+def write_lastrun(file_path: str, value: str) -> None:
+    """
+    Writes the last run timestamp from a file.
+
+    :param file_path: the path to the file
+    :param value: the last run timestamp
+    """
+    with open(file_path, "w") as f:
+        f.write(value)
 
 
 def log_message(log_path: str, message: str) -> None:
@@ -32,7 +44,7 @@ def execute_update(log_path: str, url: str, sleep_time: int) -> None:
     Executes the update script and logs the outcome.
 
     This function sends a request to the specified URL to execute an update.
-    It logs the result of the update to the specified log file and
+    It logs the response status of the update to the specified log file and
     sleeps for a specified amount of time if the update is successful,
     or for 1 hour if the update fails.
 
@@ -41,17 +53,16 @@ def execute_update(log_path: str, url: str, sleep_time: int) -> None:
     :param sleep_time: The time to sleep in seconds if the update is successful
     """
     # Send a request to the given URL and read the response
-    response = request.urlopen(url)
-    contents = response.read().decode("utf-8")
+    response: HTTPResponse = request.urlopen(url)
 
-    # Check if the update was successful
-    if contents == "ok\n":
+    # Check if the response was successful
+    if response.status == 200:
         # Log a success message and sleep for the specified time
         log_message(log_path=log_path, message="\n<b>Mirror update started successfully.</b>\n")
         time.sleep(sleep_time)
     else:
-        # Log an error message with the response contents and sleep for 1 hour
-        log_message(log_path=log_path, message=f"\n<b>ERROR during mirror update:</b>\n{contents}\n")
+        # Log an error message with the response status and sleep for 1 hour
+        log_message(log_path=log_path, message=f"\n<b>ERROR during mirror update. Status: {response.status}</b>\n")
         time.sleep(3600)
 
 
@@ -76,8 +87,11 @@ def main():
         lastrun = read_lastrun(lastrun_path)  # Read the content of the lastrun file
         current_time = int(time.time())  # Get the current time in seconds
 
-        # Check if the content of the lastrun file is a valid timestamp
-        if lastrun and lastrun.isdigit():
+        # If the file content is not a number or the number is greater than the current time
+        if not (lastrun and lastrun.isdigit() and int(lastrun) <= current_time):
+            write_lastrun(file_path=lastrun_path, value="0")  # Write 0 to the file
+            execute_update(log_path=log_path, url=update_url, sleep_time=sleep_8_hours)
+        else:
             lastrun_timestamp = int(lastrun)  # Convert the content to an integer
             # Calculate the difference between the current time and the last update
             diff = current_time - lastrun_timestamp
@@ -95,9 +109,6 @@ def main():
                     message=f"\n<b>The next mirror update will start in {remaining_time} seconds</b>\n",
                 )
                 time.sleep(remaining_time)  # Sleep for the remaining time
-        else:
-            # If the lastrun file doesn't contain a valid timestamp, execute the update script
-            execute_update(log_path=log_path, url=update_url, sleep_time=sleep_8_hours)
 
 
 if __name__ == "__main__":
