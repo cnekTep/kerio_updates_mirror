@@ -29,6 +29,7 @@ var IDSv5 = config.IDSv5;
 var IDSv6 = config.IDSv6;
 var geo_ip4_url = config.geo_ip4_url;
 var geo_ip6_url = config.geo_ip6_url;
+var geo_loc_url = config.geo_loc_url;
 var geo_github = config.geo_github;
 var fs = require('fs');
 var ip = require('ip');
@@ -565,127 +566,190 @@ function DownloadUpdates() {
 	}
 
 	function CreateGEOUpdate (callback) {
-		var file4 = __dirname + '/control-update/v4-' + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 10);
-		var file6 = __dirname + '/control-update/v6-' + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 10);
-		var file4_downloaded = false;
-		var file6_downloaded = false;
+		var geo_timeout = setTimeout(PAP, 240000, 'Максимальное время работы превышено'); // 60000 миллисекунд в одной минуте
+		var file_v4 = __dirname + '/control-update/v4-' + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 10);
+		var file_v6 = __dirname + '/control-update/v6-' + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 10);
+		var file_loc_csv = __dirname + '/control-update/locations.csv';
+		var file_v4_csv = __dirname + '/control-update/v4.csv';
+		var file_v6_csv = __dirname + '/control-update/v6.csv';
+		var file_v4_downloaded = false;
+		var file_v6_downloaded = false;
+		var file_loc_downloaded = false;
 		var minor_version = '';
 		var geoip_csv = '';
+		var file_v4_filehandler ='';
+		var file_v6_filehandler ='';
+		var v4_csv_filehandler ='';
+		var v6_csv_filehandler ='';
+		var geoip_csv_filehandler = '';
+		var geoip_gz_filehandler = '';
 		var PAP_code = false;
-		function proceedCSVfile (file_string, line_handler, callback) {
-			if (fs.existsSync (file_string)) {
-				var buf = '';
-				var file = fs.createReadStream(file_string);
-				file.on ('data', (chunk) => {
-					var lines = buf.concat(chunk).split(/\r?\n+/);
-					buf = lines.pop();
-					lines.forEach ((line) => {
-						line_handler (line.split(','));
-					});
-				});
-				file.on ('end', () => {
-					file.close();
-					if (buf.length > 0) line_handler (buf.split(','));
-					return callback();
-				});
-				file.on ('error', (error) => {
-					file.close();
-					return callback(new Error('Ошибка при чтении ' + file_string + ' ' + error.message ));
-				});
-			} else {
-				return callback(new Error('Ошибка: Файл ' + file_string + ' не существует.'));
-			}
+		var buf4 = '';
+		var buf6 = '';
+		function PAP (message) {
+			PAP_code = true;
+			clearTimeout(geo_timeout);
+			if (v4_csv_filehandler) v4_csv_filehandler.close();
+			if (v6_csv_filehandler) v6_csv_filehandler.close();
+			if (geoip_csv_filehandler) geoip_csv_filehandler.close();
+			if (geoip_gz_filehandler) geoip_gz_filehandler.close();
+			fs.unlink (file_v4_csv, () => {});
+			fs.unlink (file_v6_csv, () => {});
+			fs.unlink (geoip_csv, () => {});
+			fs.unlink (geoip_csv + '.gz', () => {});
+			fs.unlink (file_v4, () => {});
+			fs.unlink (file_v6, () => {});
+			fs.unlink (file_loc_csv, () => {});
+			buf4 = '';
+			buf6 = '';
+			return callback (message);
 		}
 		function get_files (data) {
-			if (/^\d+\.\d+$/.test(data)) {
+			if (PAP_code) {
+				PAP ('Ошибка: ' + data);
+			} else if (/^\d+\.\d+$/.test(data)) {
 				minor_version = (parseInt (data.match(/^\d+\.(\d+)$/mi)[1]) + 1).toString();
 				geoip_csv = __dirname + '/control-update/full-4-' + minor_version + '-' + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 11) + Math.random().toString(16).substr(2, 10);
-			} else if (data == file4) {
-				file4_downloaded = true;
-			} else if (data == file6) {
-				file6_downloaded = true;
+			} else if (data == file_v4) {
+				file_v4_downloaded = true;
+			} else if (data == file_v6) {
+				file_v6_downloaded = true;
+			} else if (data == file_loc_csv) {
+				file_loc_downloaded = true;
 			} else {
-				PAP_code = true;
-				fs.unlink (file4, () => {});
-				fs.unlink (file6, () => {});
-				return callback ('не удалось получить новую версию ' + data);
+				PAP ('не удалось получить новую версию ' + data);
 			}
-			if (file4_downloaded && file6_downloaded && geoip_csv.length > 50) {
-				return proceed_files();
-			}
-		}
-		function proceed_files () {
-			if (!PAP_code && fs.existsSync (file4) && fs.existsSync (file6) && geoip_csv.length > 50) {
-				var file = fs.createWriteStream(geoip_csv);
-				file.on ('error', (error) => {
-					PAP_code = true;
-					fs.unlink (file4, () => {});
-					fs.unlink (file6, () => {});
-					return file.close(callback('Ошибка при записи ' + geoip_csv + ' ' + error.message));
+			if (!PAP_code && file_v4_downloaded && file_v6_downloaded && file_loc_downloaded && geoip_csv.length > 50) {
+				v4_csv_filehandler = fs.createWriteStream(file_v4_csv);
+				v6_csv_filehandler = fs.createWriteStream(file_v6_csv);
+				geoip_csv_filehandler = fs.createWriteStream(geoip_csv);
+				file_v4_filehandler = fs.createReadStream(file_v4);
+				file_v6_filehandler = fs.createReadStream(file_v6);
+				v4_csv_filehandler.write('network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider,is_anycast\n');
+				v6_csv_filehandler.write('network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider,is_anycast\n');
+				v4_csv_filehandler.on ('error', (error) => {
+					PAP ('Ошибка записи ' + file_v4_csv + ' ' + error.message);
 				});
-				file.on ('close', () => {
-					fs.unlink (file4, () => {});
-					fs.unlink (file6, () => {});
+				v6_csv_filehandler.on ('error', (error) => {
+					PAP ('Ошибка записи ' + file_v6_csv + ' ' + error.message);
+				});
+				geoip_csv_filehandler.on ('error', (error) => {
+					PAP ('Ошибка записи ' + geoip_csv + ' ' + error.message);
+				});
+				file_v6_filehandler.on ('error', (error) => {
+					PAP ('Ошибка чтения ' + file_v6 + ' ' + error.message );
+				});				
+				file_v4_filehandler.on ('error', (error) => {
+					PAP ('Ошибка чтения ' + file_v4 + ' ' + error.message );
+				});
+				v4_csv_filehandler.on ('close', () => {
+					if (PAP_code) fs.unlink (file_v4_csv, () => {});
+				});
+                v6_csv_filehandler.on ('close', () => {
+					if (PAP_code) fs.unlink (file_v6_csv, () => {});
+				});
+				geoip_csv_filehandler.on ('close', () => {
 					if (PAP_code) fs.unlink (geoip_csv, () => {});
 					else {
-						var file_geoip_csv = fs.createReadStream(geoip_csv);
-						var file_geoip_gz = fs.createWriteStream(geoip_csv + '.gz');
-						file_geoip_gz.on ('close', () => {
-							if (PAP_code) {
-								fs.unlink (geoip_csv + '.gz', () => {});
-							} else {
+						geoip_csv_filehandler = fs.createReadStream(geoip_csv);
+						geoip_gz_filehandler = fs.createWriteStream(geoip_csv + '.gz');
+						geoip_csv_filehandler.on ('error', (error) => {
+							PAP ('Ошибка при чтении ' + geoip_csv + ' ' + error.message );
+						});
+						geoip_gz_filehandler.on ('error', (error) => {
+							PAP ('Ошибка при записи ' + geoip_csv + '.gz ' + error.message);
+						});
+						geoip_gz_filehandler.on ('close', () => {
+							if (PAP_code) fs.unlink (geoip_csv + '.gz', () => {});
+							else {
 								CleanupOldFiles('4.' + minor_version, ()=>{});
+								clearTimeout(geo_timeout);
 								return callback ('база GeoLite2 загружена с github: 4.' + minor_version);
 							}
 						});
-						file_geoip_csv.on ('close', () => {
+						geoip_csv_filehandler.on ('close', () => {
 							fs.unlink (geoip_csv, () => {});
 						});
-						file_geoip_csv.on ('error', (error) => {
-							PAP_code = true;
-							file_geoip_csv.close();
-							file_geoip_gz.close();
-							return callback ('Ошибка при чтении ' + geoip_csv + ' ' + error.message );
-						});
-						file_geoip_gz.on ('error', (error) => {
-							PAP_code = true;
-							file_geoip_csv.close();
-							file_geoip_gz.close();
-							return callback ('Ошибка при записи ' + geoip_csv + '.gz ' + error.message);
-						});
-						file_geoip_csv.pipe(zlib.createGzip()).pipe(file_geoip_gz);
+						geoip_csv_filehandler.pipe(zlib.createGzip()).pipe(geoip_gz_filehandler);
 					}
 				});
-				proceedCSVfile (file4, (linedata) => {
-					if (!PAP_code) {
-						if (/^\d+$/.test(linedata[1])) file.write(linedata[0] + ',' + linedata[1] + '\n');
-						else if (/^\d+$/.test(linedata[2])) file.write(linedata[0] + ',' + linedata[2] + '\n');
+				file_v4_filehandler.on ('close', () => {
+					fs.unlink (file_v4, () => {});
+					v4_csv_filehandler.close();
+					buf4 = '';
+					if (file_v6_filehandler.closed) geoip_csv_filehandler.close();
+				});
+				file_v6_filehandler.on ('close', () => {
+					fs.unlink (file_v6, () => {});
+					v6_csv_filehandler.close();
+					buf6 = '';
+					if (file_v4_filehandler.closed) geoip_csv_filehandler.close();
+				});
+				file_v4_filehandler.on ('end', () => {
+					file_v4_filehandler.close();
+					if (!PAP_code && buf4.length > 0) {
+						var linedata = buf4.split(',');
+						if (/^\d+$/.test(linedata[1])) {
+							geoip_csv_filehandler.write(linedata[0] + ',' + linedata[1] + '\n');
+							v4_csv_filehandler.write(linedata[0] + ',' + linedata[1] + ',' + linedata[1] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+						} else if (/^\d+$/.test(linedata[2])){
+							geoip_csv_filehandler.write(linedata[0] + ',' + linedata[2] + '\n');
+							v4_csv_filehandler.write(linedata[0] + ',' + linedata[2] + ',' + linedata[2] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+						}
 					}
-				}, (error) => {
-					fs.unlink (file4, () => {});
-					if (error) {
-						PAP_code = true;
-						fs.unlink (file6, () => {});
-						return file.close(callback(error.message));
-					} else proceedCSVfile (file6, (linedata) => {
-								if (!PAP_code) {
-									if (/^\d+$/.test(linedata[1])) file.write(linedata[0] + ',' + linedata[1] + '\n');
-									else if (/^\d+$/.test(linedata[2])) file.write(linedata[0] + ',' + linedata[2] + '\n');
-								}
-							}, (error) => {
-								fs.unlink (file6, () => {});
-								if (error) {
-									PAP_code = true;
-									return file.close(callback(error.message));
-								} else file.close();
+				});
+				file_v6_filehandler.on ('end', () => {
+					file_v6_filehandler.close();
+					if (!PAP_code && buf6.length > 0) {
+						var linedata = buf6.split(',');
+						if (/^\d+$/.test(linedata[1])) {
+							geoip_csv_filehandler.write(linedata[0] + ',' + linedata[1] + '\n');
+							v6_csv_filehandler.write(linedata[0] + ',' + linedata[1] + ',' + linedata[1] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+						} else if (/^\d+$/.test(linedata[2])){
+							geoip_csv_filehandler.write(linedata[0] + ',' + linedata[2] + '\n');
+							v6_csv_filehandler.write(linedata[0] + ',' + linedata[2] + ',' + linedata[2] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+						}
+					}
+				});
+				file_v4_filehandler.on ('data', (chunk) => {
+					if (PAP_code) file_v4_filehandler.close();
+					else {
+						var lines = buf4.concat(chunk).split(/\r?\n+/);
+						buf4 = lines.pop();
+						lines.forEach ((line) => {
+							var linedata = line.split(',');
+							if (/^\d+$/.test(linedata[1])) {
+								geoip_csv_filehandler.write(linedata[0] + ',' + linedata[1] + '\n');
+								v4_csv_filehandler.write(linedata[0] + ',' + linedata[1] + ',' + linedata[1] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+							} else if (/^\d+$/.test(linedata[2])){
+								geoip_csv_filehandler.write(linedata[0] + ',' + linedata[2] + '\n');
+								v4_csv_filehandler.write(linedata[0] + ',' + linedata[2] + ',' + linedata[2] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
 							}
-						);
+						});
 					}
-				);
+				});
+				file_v6_filehandler.on ('data', (chunk) => {
+					if (PAP_code) file_v6_filehandler.close();
+					else {
+						var lines = buf6.concat(chunk).split(/\r?\n+/);
+						buf6 = lines.pop();
+						lines.forEach ((line) => {
+							var linedata = line.split(',');
+							if (/^\d+$/.test(linedata[1])) {
+								geoip_csv_filehandler.write(linedata[0] + ',' + linedata[1] + '\n');
+								v6_csv_filehandler.write(linedata[0] + ',' + linedata[1] + ',' + linedata[1] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+							} else if (/^\d+$/.test(linedata[2])){
+								geoip_csv_filehandler.write(linedata[0] + ',' + linedata[2] + '\n');
+								v6_csv_filehandler.write(linedata[0] + ',' + linedata[2] + ',' + linedata[2] + ',' + linedata[3] + ',' + linedata[4] + ',' + linedata[5] + ',' + linedata[6] + '\n');
+							}
+						});
+					}
+				});
 			}
 		}
-		DownloadNewVersion (geo_ip4_url, file4, (data) => {get_files(data)});
-		DownloadNewVersion (geo_ip6_url, file6, (data) => {get_files(data)});
+		DownloadNewVersion (geo_ip4_url, file_v4, (data) => {get_files(data)});
+		DownloadNewVersion (geo_ip6_url, file_v6, (data) => {get_files(data)});
+		DownloadNewVersion (geo_loc_url, file_loc_csv, (data) => {get_files(data)});
 		GetSavedVersion ('4', (data) => {get_files(data)});
 	}
 
@@ -769,7 +833,7 @@ function DownloadUpdates() {
 		});
 	}
 
-	DownloadUpdatesLog('Зеркало обновлений v.25.03.09 by Ru-Board (nodejs edition)');
+	DownloadUpdatesLog('Зеркало обновлений v.25.03.20 by Ru-Board (nodejs edition)');
 	DownloadUpdatesLog('Распространяется "как есть" на условиях https://unlicense.org/');
 		if (LicenseNo) {
 	DownloadUpdatesLog('Используется лицензионный ключ: ' + LicenseNo);
@@ -1245,7 +1309,7 @@ function start() {
 		}
 	}
 // Начинаем подготовку к работе
-	console.log('Зеркало обновлений v.25.03.16 by Ru-Board (nodejs edition)');
+	console.log('Зеркало обновлений v.25.03.20 by Ru-Board (nodejs edition)');
 	console.log('Распространяется "как есть" на условиях https://unlicense.org/');
 // Проверяем, является ли система systemd линукс
 	if (/^win/.test(process.platform)) {

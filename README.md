@@ -54,7 +54,7 @@ Docker and Docker Compose are required for work. Install them following the inst
     sudo docker load -i tor_v1.1.1.tar
     ```
    ```bash
-   sudo docker load -i mirrorkc_v1.2.0.tar
+   sudo docker load -i mirrorkc_v1.2.1.tar
    ```
 3. Download the repository and run ```docker-compose```:
     ```bash

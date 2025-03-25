@@ -35,6 +35,7 @@ config.avir_passw = '';
 // Ссылки на базы MaxMind GeoLite2
 config.geo_ip4_url = 'https://raw.githubusercontent.com/wyot1/GeoLite2-Unwalled/downloads/COUNTRY/CSV/GeoLite2-Country-Blocks-IPv4.csv';
 config.geo_ip6_url = 'https://raw.githubusercontent.com/wyot1/GeoLite2-Unwalled/downloads/COUNTRY/CSV/GeoLite2-Country-Blocks-IPv6.csv';
+config.geo_loc_url = 'https://raw.githubusercontent.com/wyot1/GeoLite2-Unwalled/downloads/COUNTRY/CSV/GeoLite2-Country-Locations-en.csv';
 config.geo_github = true;
 
 // Публичные ДНС 8.8.8.8 Google и 1.1.1.1 Cloudflare
