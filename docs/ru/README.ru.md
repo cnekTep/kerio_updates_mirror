@@ -51,7 +51,7 @@
 1. [Скачайте Docker-образы.](https://t.me/my_store_files_bot?start=kerio_updates_mirror)
 2. Загрузите образы из архивов:
     ```bash
-    sudo docker load -i tor_v1.1.1.tar
+    sudo docker load -i tor_v1.1.2.tar
     ```
    ```bash
    sudo docker load -i mirrorkc_v1.2.1.tar

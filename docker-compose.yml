@@ -1,6 +1,6 @@
 services:
   tor:
-    image: "tor:v1.1.1"
+    image: "tor:v1.1.2"
     stop_signal: SIGINT
     restart: unless-stopped
     build:
@@ -8,6 +8,8 @@ services:
     networks:
       external:
         ipv4_address: 172.222.0.5
+#    ports:
+#      - "8118:8118"  # Uncomment if you want to use the Tor proxy outside containers.
     extra_hosts:
       - "ids-update.kerio.com:172.222.0.10"
       - "sophos-update.kerio.com:172.222.0.10"
